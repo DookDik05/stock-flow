@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // ========= TYPES =========
 // การกำหนด Type สำหรับข้อมูลสินค้าด้วย TypeScript
@@ -31,21 +31,121 @@ const initialProducts: Product[] = [
 const icons = {
   dashboard: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>,
   products: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.5V9a2 2 0 0 0-2-2H4v11h16V7h-4a2 2 0 0 0-2 2v5.5"></path><line x1="10" y1="14" x2="14" y2="14"></line></svg>,
+  clock: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12,6 12,12 16,14"></polyline></svg>,
   settings: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2.0l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2.0l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
   plus: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
   edit: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
   trash: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
 };
 
+// ========= CLOCK COMPONENT =========
+// Digital clock component with multiple time zones
+const Clock = () => {
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Time zones to display
+    const timeZones = [
+        { name: 'Local Time', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+        { name: 'UTC', timezone: 'UTC' },
+        { name: 'New York', timezone: 'America/New_York' },
+        { name: 'London', timezone: 'Europe/London' },
+        { name: 'Tokyo', timezone: 'Asia/Tokyo' },
+        { name: 'Bangkok', timezone: 'Asia/Bangkok' },
+    ];
+
+    // Update time every second
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    // Format time for a specific timezone
+    const formatTime = (timezone: string) => {
+        return new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+        }).format(currentTime);
+    };
+
+    // Format date for a specific timezone
+    const formatDate = (timezone: string) => {
+        return new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        }).format(currentTime);
+    };
+
+    return (
+        <div className="space-y-8">
+            {/* Main Clock Display */}
+            <div className="text-center">
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8 mb-8">
+                    <h2 className="text-3xl font-bold text-white mb-4">Digital World Clock</h2>
+                    <div className="text-6xl font-mono font-bold text-blue-400 mb-2">
+                        {formatTime(timeZones[0].timezone)}
+                    </div>
+                    <div className="text-xl text-gray-300">
+                        {formatDate(timeZones[0].timezone)}
+                    </div>
+                    <div className="text-lg text-gray-400 mt-2">
+                        {timeZones[0].name} ({timeZones[0].timezone})
+                    </div>
+                </div>
+            </div>
+
+            {/* Time Zone Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {timeZones.slice(1).map((zone) => (
+                    <div
+                        key={zone.timezone}
+                        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:bg-gray-800/70 transition-all duration-300"
+                    >
+                        <h3 className="text-xl font-semibold text-white mb-3">{zone.name}</h3>
+                        <div className="text-3xl font-mono font-bold text-blue-400 mb-2">
+                            {formatTime(zone.timezone)}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                            {formatDate(zone.timezone)}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                            {zone.timezone}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Clock Info */}
+            <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-3">About This Clock</h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                    This digital clock displays the current time in multiple time zones around the world. 
+                    All times are automatically updated every second using the JavaScript Intl.DateTimeFormat API 
+                    for accurate time zone conversions and formatting. The main display shows your local time, 
+                    while the cards below show times in major global cities.
+                </p>
+            </div>
+        </div>
+    );
+};
+
 
 // ========= COMPONENTS =========
 
 // --- Sidebar Component ---
-const Sidebar = () => {
-    const [active, setActive] = useState('Products');
+const Sidebar = ({ active, setActive }: { active: string; setActive: (active: string) => void }) => {
     const navItems = [
         { name: 'Dashboard', icon: icons.dashboard },
         { name: 'Products', icon: icons.products },
+        { name: 'Clock', icon: icons.clock },
         { name: 'Settings', icon: icons.settings },
     ];
     return (
@@ -247,6 +347,7 @@ const ProductModal = ({
 
 // ========= MAIN APP COMPONENT =========
 export default function App() {
+    const [activeNav, setActiveNav] = useState('Products');
     const [products, setProducts] = useState<Product[]>(initialProducts);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -297,36 +398,89 @@ export default function App() {
     const lowStockItems = products.filter(p => p.status === 'Low Stock').length;
     const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
 
+    // Render main content based on active navigation
+    const renderMainContent = () => {
+        switch (activeNav) {
+            case 'Clock':
+                return <Clock />;
+            case 'Dashboard':
+                return (
+                    <div>
+                        <h2 className="text-2xl font-semibold text-white mb-6">Dashboard</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <StatCard 
+                                title="สินค้าทั้งหมด"
+                                value={totalProducts}
+                                icon={icons.products}
+                                color="bg-blue-500/30"
+                            />
+                            <StatCard 
+                                title="มูลค่ารวม"
+                                value={`฿${totalValue.toLocaleString()}`}
+                                icon={<span className="text-2xl font-bold">฿</span>}
+                                color="bg-green-500/30"
+                            />
+                            <StatCard 
+                                title="สินค้าใกล้หมด"
+                                value={lowStockItems}
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path></svg>}
+                                color="bg-yellow-500/30"
+                            />
+                        </div>
+                    </div>
+                );
+            case 'Products':
+                return (
+                    <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <StatCard 
+                                title="สินค้าทั้งหมด"
+                                value={totalProducts}
+                                icon={icons.products}
+                                color="bg-blue-500/30"
+                            />
+                            <StatCard 
+                                title="มูลค่ารวม"
+                                value={`฿${totalValue.toLocaleString()}`}
+                                icon={<span className="text-2xl font-bold">฿</span>}
+                                color="bg-green-500/30"
+                            />
+                            <StatCard 
+                                title="สินค้าใกล้หมด"
+                                value={lowStockItems}
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path></svg>}
+                                color="bg-yellow-500/30"
+                            />
+                        </div>
+                        <ProductTable products={products} onEdit={handleEditProduct} onDelete={handleDeleteProduct} />
+                    </div>
+                );
+            case 'Settings':
+                return (
+                    <div>
+                        <h2 className="text-2xl font-semibold text-white mb-6">Settings</h2>
+                        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                            <p className="text-gray-300">Settings panel - Configure your application here.</p>
+                        </div>
+                    </div>
+                );
+            default:
+                return (
+                    <div>
+                        <h2 className="text-2xl font-semibold text-white mb-6">Welcome to StockFlow</h2>
+                        <p className="text-gray-300">Select a section from the sidebar to get started.</p>
+                    </div>
+                );
+        }
+    };
+
     return (
         <div className="bg-gray-900 h-screen w-full flex font-sans">
-            <Sidebar />
+            <Sidebar active={activeNav} setActive={setActiveNav} />
             <main className="flex-1 flex flex-col overflow-hidden">
                 <Header onAddProductClick={handleAddProductClick} />
                 <div className="flex-1 p-8 overflow-y-auto bg-gray-800/20">
-                    {/* Stat Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <StatCard 
-                            title="สินค้าทั้งหมด"
-                            value={totalProducts}
-                            icon={icons.products}
-                            color="bg-blue-500/30"
-                        />
-                        <StatCard 
-                            title="มูลค่ารวม"
-                            value={`฿${totalValue.toLocaleString()}`}
-                            icon={<span className="text-2xl font-bold">฿</span>}
-                             color="bg-green-500/30"
-                        />
-                         <StatCard 
-                            title="สินค้าใกล้หมด"
-                            value={lowStockItems}
-                            icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path></svg>}
-                             color="bg-yellow-500/30"
-                        />
-                    </div>
-                    
-                    {/* Product Table */}
-                    <ProductTable products={products} onEdit={handleEditProduct} onDelete={handleDeleteProduct} />
+                    {renderMainContent()}
                 </div>
             </main>
             
